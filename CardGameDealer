@@ -1,0 +1,105 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+
+class Program
+{
+    static void Main(string[] args)
+    {
+        int numPlayers = 4;
+        List<int> rolls = new List<int>();
+        Dice dice = new Dice();
+
+        // Roll for each player
+        Console.WriteLine("Rolling for the dealer...");
+        for (int i = 0; i < numPlayers; i++)
+        {
+            int roll = dice.Roll();
+            rolls.Add(roll);
+            Console.WriteLine($"Player {i + 1} rolls {roll}");
+        }
+
+        // Determine the dealer (highest roll)
+        int dealer = GetDealer(rolls);
+        Console.WriteLine($"\nPlayer {dealer + 1} is the dealer.");
+
+        // Create and shuffle the deck
+        Deck deck = new Deck();
+        deck.Shuffle();
+
+        // Deal the cards
+        List<List<Card>> playersHands = DealCards(deck, dealer, numPlayers);
+
+        // Print hands
+        for (int i = 0; i < numPlayers; i++)
+        {
+            Console.WriteLine($"\nPlayer {i + 1}:");
+            foreach (var card in playersHands[i])
+            {
+                Console.WriteLine(card);
+            }
+        }
+    }
+
+    // Helper method to determine the dealer
+    static int GetDealer(List<int> rolls)
+    {
+        int maxRoll = rolls.Max();
+        List<int> tiedPlayers = new List<int>();
+
+        // Find players with the highest roll
+        for (int i = 0; i < rolls.Count; i++)
+        {
+            if (rolls[i] == maxRoll)
+            {
+                tiedPlayers.Add(i);
+            }
+        }
+
+        // Handle ties by re-rolling
+        while (tiedPlayers.Count > 1)
+        {
+            Console.WriteLine("\nRe-rolling for tie break...");
+            List<int> newRolls = new List<int>();
+            foreach (var player in tiedPlayers)
+            {
+                int roll = new Dice().Roll();
+                newRolls.Add(roll);
+                Console.WriteLine($"Player {player + 1} re-rolls {roll}");
+            }
+
+            maxRoll = newRolls.Max();
+            tiedPlayers.Clear();
+            for (int i = 0; i < newRolls.Count; i++)
+            {
+                if (newRolls[i] == maxRoll)
+                {
+                    tiedPlayers.Add(i);
+                }
+            }
+        }
+
+        return tiedPlayers[0];
+    }
+
+    // Helper method to deal cards
+    static List<List<Card>> DealCards(Deck deck, int dealer, int numPlayers)
+    {
+        List<List<Card>> hands = new List<List<Card>>();
+
+        // Initialize hands for each player
+        for (int i = 0; i < numPlayers; i++)
+        {
+            hands.Add(new List<Card>());
+        }
+
+        int currentPlayer = dealer;
+        while (deck.DealCard() != null)
+        {
+            hands[currentPlayer].Add(deck.DealCard());
+            currentPlayer = (currentPlayer + 1) % numPlayers;
+        }
+
+        return hands;
+    }
+}
